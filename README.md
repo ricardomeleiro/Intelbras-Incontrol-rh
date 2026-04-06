@@ -37,7 +37,7 @@
                               ▼
                   ┌───────────────────────┐
                   │  InControl Intelbras  │
-                  │  192.168.5.99:4441   │
+                  │  IP_DO_INCONTROL:4441   │
                   └───────────────────────┘
 ```
 
@@ -48,7 +48,7 @@ Uma única imagem Docker contém o frontend (Nginx) e o backend (Node.js), que a
 ## Pré-requisitos
 
 - Docker e Docker Compose instalados no servidor
-- Acesso de rede ao InControl (`192.168.5.99:4441`)
+- Acesso de rede ao InControl 
 - Usuário cadastrado no InControl com permissão de leitura de eventos
 
 ---
@@ -61,7 +61,7 @@ git clone https://github.com/ricardomeleiro/Intelbras-Incontrol-rh.git
 cd Intelbras-Incontrol-rh
 
 # 2. (Opcional) Ajuste o IP/porta do InControl em docker-compose.yml
-#    INCONTROL_URL: "https://192.168.5.99:4441"
+#    INCONTROL_URL: "https://IP_DO_INCONTROL:4441"
 
 # 3. Suba o container
 docker compose up -d
@@ -80,7 +80,7 @@ docker run -d \
   --name incontrol-rh \
   --restart unless-stopped \
   -p 9090:80 \
-  -e INCONTROL_URL="https://192.168.5.99:4441" \
+  -e INCONTROL_URL="https://IP_DO_INCONTROL:4441" \
   rickdevs/incontrol-rh:latest
 ```
 
@@ -95,7 +95,7 @@ services:
     ports:
       - "9090:80"
     environment:
-      INCONTROL_URL: "https://192.168.5.99:4441"
+      INCONTROL_URL: "https://IP_DO_INCONTROL:4441"
 ```
 
 ---
@@ -155,7 +155,7 @@ Intelbras-Incontrol-rh/
 
 | Variável | Padrão | Descrição |
 |----------|--------|-----------|
-| `INCONTROL_URL` | `https://192.168.5.99:4441` | URL base da API do InControl |
+| `INCONTROL_URL` | `https://IP_DO_INCONTROL:4441` | URL base da API do InControl |
 | `PORT` | `3001` | Porta interna do backend Node.js |
 
 ---
