@@ -1,0 +1,29 @@
+# Node
+node_modules/
+npm-debug.log*
+.npm
+
+# Ambiente
+.env
+.env.local
+.env.*.local
+
+# Docker
+.dockerignore
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build artifacts
+dist/
+build/

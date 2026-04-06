@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>InControl RH · Registros de Acesso</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg:      #0d0f14;
+    --surface: #13161d;
+    --panel:   #1a1e28;
+    --border:  #252a38;
+    --accent:  #4f8ef7;
+    --green:   #38d9a9;
+    --red:     #ff6b6b;
+    --yellow:  #ffd43b;
+    --text:    #e8ecf4;
+    --muted:   #5a6275;
+    --mono:    'DM Mono', monospace;
+    --sans:    'Syne', sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: var(--sans); min-height: 100vh;
+    display: flex; flex-direction: column; overflow-x: hidden;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image: linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px; opacity: .3; pointer-events: none; z-index: 0;
+  }
+
+  /* HEADER */
+  header {
+    position: relative; z-index: 10;
+    display: flex; align-items: center; gap: 16px;
+    padding: 18px 40px; border-bottom: 1px solid var(--border);
+    background: rgba(13,15,20,.9); backdrop-filter: blur(12px);
+  }
+  .logo-mark {
+    width: 36px; height: 36px; background: var(--accent); border-radius: 8px;
+    display: grid; place-items: center; font-family: var(--mono);
+    font-size: 12px; font-weight: 500; color: #fff; flex-shrink: 0;
+  }
+  .logo-text { font-size: 14px; font-weight: 700; letter-spacing: .03em; }
+  .logo-sub  { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+  .header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  #user-badge {
+    display: none; align-items: center; gap: 8px;
+    padding: 5px 12px; border-radius: 999px;
+    background: var(--panel); border: 1px solid var(--border);
+    font-size: 11px; font-family: var(--mono); color: var(--muted);
+  }
+  #user-badge .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green); box-shadow: 0 0 6px var(--green);
+  }
+  #btn-logout {
+    display: none; padding: 5px 12px; border-radius: 6px;
+    border: 1px solid var(--border); background: transparent;
+    color: var(--muted); font-size: 11px; cursor: pointer; font-family: var(--sans);
+    transition: all .2s;
+  }
+  #btn-logout:hover { border-color: var(--red); color: var(--red); }
+
+  /* MAIN */
+  main {
+    position: relative; z-index: 5; flex: 1;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 40px 24px 80px; gap: 24px;
+  }
+
+  /* CARD */
+  .card {
+    width: 100%; max-width: 960px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 30px;
+    position: relative; overflow: hidden;
+  }
+  .card::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% -20%, rgba(79,142,247,.07) 0%, transparent 65%);
+    pointer-events: none;
+  }
+  .card-title {
+    font-size: 11px; font-weight: 600; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 20px;
+  }
+
+  /* FORMS */
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  label  { font-size: 11px; font-weight: 600; letter-spacing: .06em; color: var(--muted); text-transform: uppercase; }
+  input, select {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 8px; padding: 11px 14px; color: var(--text);
+    font-family: var(--mono); font-size: 13px; outline: none; width: 100%;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  input:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(79,142,247,.12);
+  }
+  input::placeholder { color: var(--muted); }
+  select option { background: var(--panel); }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+  /* BUTTONS */
+  .btn {
+    padding: 11px 24px; border-radius: 8px; border: none;
+    font-family: var(--sans); font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: all .2s;
+    display: inline-flex; align-items: center; gap: 7px;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { filter: brightness(1.1); box-shadow: 0 4px 18px rgba(79,142,247,.3); }
+  .btn-primary:disabled { opacity: .4; cursor: not-allowed; filter: none; box-shadow: none; }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-full { width: 100%; justify-content: center; }
+
+  /* LOGIN */
+  #screen-login { width: 100%; display: flex; flex-direction: column; align-items: center; }
+  #screen-login .card { max-width: 420px; }
+  .hero { text-align: center; margin-bottom: 28px; }
+  .hero h1 { font-size: 24px; font-weight: 800; margin-bottom: 6px; }
+  .hero p { font-size: 12px; color: var(--muted); font-family: var(--mono); }
+  .form-fields { display: flex; flex-direction: column; gap: 14px; }
+
+  /* APP */
+  #screen-app { display: none; flex-direction: column; align-items: center; gap: 20px; width: 100%; max-width: 960px; }
+
+  /* SEARCH */
+  .search-wrap { position: relative; width: 100%; }
+  .search-wrap input { font-size: 15px; padding: 14px 18px; padding-right: 48px; border-radius: 10px; }
+  .search-icon { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+  #suggestions {
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 10px; z-index: 200; overflow: hidden; display: none;
+    box-shadow: 0 16px 40px rgba(0,0,0,.5);
+  }
+  .sug-item {
+    padding: 11px 16px; cursor: pointer; display: flex; align-items: center;
+    gap: 10px; font-size: 13px; border-bottom: 1px solid var(--border); transition: background .15s;
+  }
+  .sug-item:last-child { border-bottom: none; }
+  .sug-item:hover { background: rgba(79,142,247,.1); }
+  .sug-av {
+    width: 30px; height: 30px; border-radius: 7px; background: var(--border);
+    display: grid; place-items: center; font-weight: 700; font-size: 12px;
+    color: var(--accent); flex-shrink: 0;
+  }
+  .sug-name { font-weight: 600; }
+  .sug-dept { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+
+  /* FILTERS */
+  .filters-row { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 14px; align-items: end; }
+
+  /* RESULTS */
+  #results-card { width: 100%; display: none; }
+  .res-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+  .res-person { display: flex; align-items: center; gap: 12px; }
+  .res-av {
+    width: 44px; height: 44px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent) 0%, #7b5ea7 100%);
+    display: grid; place-items: center; font-size: 17px; font-weight: 800; color: #fff;
+  }
+  .res-name { font-size: 17px; font-weight: 700; }
+  .res-sub { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+  .badge { padding: 3px 10px; border-radius: 999px; font-size: 11px; font-family: var(--mono); }
+  .badge-blue { background: rgba(79,142,247,.15); color: var(--accent); border: 1px solid rgba(79,142,247,.25); }
+
+  /* SUMMARY */
+  .summary { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+  .sum-chip {
+    padding: 8px 14px; border-radius: 8px;
+    background: var(--panel); border: 1px solid var(--border);
+    display: flex; flex-direction: column; align-items: center; min-width: 80px;
+  }
+  .sum-val { font-size: 20px; font-weight: 800; font-family: var(--mono); }
+  .sum-lbl { font-size: 10px; color: var(--muted); margin-top: 1px; }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  thead { background: var(--panel); }
+  thead th {
+    padding: 10px 14px; text-align: left;
+    font-size: 10px; font-weight: 600; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .12s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(79,142,247,.04); }
+  tbody td { padding: 11px 14px; font-family: var(--mono); vertical-align: middle; }
+
+  .chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 2px 9px; border-radius: 999px; font-size: 10px; font-weight: 600; white-space: nowrap;
+  }
+  .chip-green  { background: rgba(56,217,169,.12); color: var(--green);  border: 1px solid rgba(56,217,169,.2); }
+  .chip-red    { background: rgba(255,107,107,.12); color: var(--red);    border: 1px solid rgba(255,107,107,.2); }
+  .chip-yellow { background: rgba(255,212,59,.12);  color: var(--yellow); border: 1px solid rgba(255,212,59,.2); }
+  .chip-gray   { background: rgba(255,255,255,.05); color: var(--muted);  border: 1px solid var(--border); }
+
+  /* STATES */
+  .state-box {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 10px; padding: 56px 20px;
+    color: var(--muted); font-family: var(--mono); font-size: 12px;
+  }
+  .state-icon { font-size: 32px; }
+  .spinner {
+    width: 26px; height: 26px; border: 3px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .error-box {
+    background: rgba(255,107,107,.08); border: 1px solid rgba(255,107,107,.2);
+    color: var(--red); border-radius: 8px; padding: 10px 14px;
+    font-size: 12px; font-family: var(--mono); display: none;
+  }
+
+  @media (max-width: 640px) {
+    header { padding: 14px 18px; }
+    .card { padding: 20px 16px; }
+    .filters-row { grid-template-columns: 1fr; }
+    .grid2, .grid3 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">IC</div>
+  <div>
+    <div class="logo-text">InControl · RH</div>
+    <div class="logo-sub">Registros de Acesso</div>
+  </div>
+  <div class="header-right">
+    <div id="user-badge"><span class="dot"></span><span id="badge-user"></span></div>
+    <button class="btn btn-ghost" id="btn-logout" onclick="doLogout()">Sair</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- LOGIN -->
+  <div id="screen-login">
+    <div class="card">
+      <div class="hero">
+        <h1>Bem-vindo</h1>
+        <p>Acesse com seu usuário do InControl Intelbras</p>
+      </div>
+      <div id="login-error" class="error-box"></div>
+      <div class="form-fields">
+        <div class="field">
+          <label>Usuário</label>
+          <input type="text" id="inp-user" placeholder="admin" autocomplete="username" />
+        </div>
+        <div class="field">
+          <label>Senha</label>
+          <input type="password" id="inp-pass" placeholder="••••••••" autocomplete="current-password" />
+        </div>
+        <button class="btn btn-primary btn-full" id="btn-login" onclick="doLogin()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+          Entrar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div id="screen-app">
+
+    <!-- BUSCA -->
+    <div class="card" style="width:100%; overflow:visible">
+      <div class="card-title">Buscar Colaborador</div>
+      <div class="search-wrap">
+        <input type="text" id="inp-search" placeholder="Digite o nome do colaborador…"
+          autocomplete="off" oninput="onSearchInput()" onkeydown="onSearchKey(event)" />
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <div id="suggestions"></div>
+      </div>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="card" id="filters-card" style="display:none; width:100%">
+      <div class="card-title">Filtros</div>
+      <div class="filters-row">
+        <div class="field">
+          <label>Data Início</label>
+          <input type="date" id="inp-start" />
+        </div>
+        <div class="field">
+          <label>Data Fim</label>
+          <input type="date" id="inp-end" />
+        </div>
+        <div class="field">
+          <label>Equipamento</label>
+          <select id="sel-equip">
+            <option value="">Todos os equipamentos</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-end">
+          <button class="btn btn-primary" onclick="buscarRegistros()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            Buscar
+          </button>
+          <button class="btn btn-ghost" onclick="exportPDF()" title="Exportar PDF">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            PDF
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTADOS -->
+    <div class="card" id="results-card">
+      <div class="res-header">
+        <div class="res-person" id="res-person-info"></div>
+        <span class="badge badge-blue" id="res-count"></span>
+      </div>
+      <div class="summary" id="res-summary"></div>
+      <div id="res-body"></div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+const API = '/api';
+let state = { token: null, pessoaNome: null, equipamentos: [], registros: [] };
+
+// ── UTILS ──────────────────────────────────────────────────────────────────────
+function initDates() {
+  const hoje  = new Date();
+  const inicio = new Date(); inicio.setDate(hoje.getDate() - 30);
+  document.getElementById('inp-start').value = inicio.toISOString().split('T')[0];
+  document.getElementById('inp-end').value   = hoje.toISOString().split('T')[0];
+}
+
+function initials(nome) {
+  return (nome || '?').split(' ').slice(0,2).map(w => w[0]?.toUpperCase() || '').join('');
+}
+
+function fmtDateTime(tsMs) {
+  if (!tsMs) return '—';
+  const d = new Date(Number(tsMs));
+  const data = d.toLocaleDateString('pt-BR');
+  const hora = d.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  return { data, hora };
+}
+
+function statusChip(status, sentido) {
+  if (status === 1) return `<span class="chip chip-green">● Liberado</span>`;
+  if (status === 0) return `<span class="chip chip-red">⚠ Negado</span>`;
+  if (status === 2) return `<span class="chip chip-yellow">⚡ Alarme</span>`;
+  return `<span class="chip chip-gray">${status ?? '—'}</span>`;
+}
+
+function sentidoLabel(s) {
+  if (!s) return '';
+  if (s.includes('entry') || s === 'E') return '→ Entrada';
+  if (s.includes('out')   || s === 'S') return '← Saída';
+  return '';
+}
+
+// ── LOGIN ─────────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const user = document.getElementById('inp-user').value.trim();
+  const pass = document.getElementById('inp-pass').value;
+  const errEl = document.getElementById('login-error');
+  const btn   = document.getElementById('btn-login');
+  if (!user || !pass) { showErr(errEl,'Preencha usuário e senha.'); return; }
+  btn.disabled = true; btn.textContent = 'Entrando…'; errEl.style.display = 'none';
+
+  try {
+    const r = await fetch(`${API}/login`, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ username: user, password: pass })
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'Falha no login.');
+    state.token = data.token;
+
+    document.getElementById('screen-login').style.display = 'none';
+    document.getElementById('screen-app').style.display   = 'flex';
+    document.getElementById('user-badge').style.display   = 'flex';
+    document.getElementById('badge-user').textContent     = user;
+    document.getElementById('btn-logout').style.display   = 'block';
+
+    initDates();
+    carregarEquipamentos();
+  } catch(e) {
+    showErr(errEl, e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg> Entrar';
+  }
+}
+
+function showErr(el, msg) { el.textContent = msg; el.style.display = 'block'; }
+
+function doLogout() {
+  state = { token: null, pessoaNome: null, equipamentos: [], registros: [] };
+  document.getElementById('screen-login').style.display = 'flex';
+  document.getElementById('screen-app').style.display   = 'none';
+  document.getElementById('user-badge').style.display   = 'none';
+  document.getElementById('btn-logout').style.display   = 'none';
+  document.getElementById('inp-user').value  = '';
+  document.getElementById('inp-pass').value  = '';
+  document.getElementById('inp-search').value = '';
+  document.getElementById('filters-card').style.display  = 'none';
+  document.getElementById('results-card').style.display  = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('inp-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+  document.getElementById('inp-user').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('inp-pass').focus(); });
+});
+
+// ── EQUIPAMENTOS ──────────────────────────────────────────────────────────────
+async function carregarEquipamentos() {
+  try {
+    const r = await fetch(`${API}/equipamentos?token=${encodeURIComponent(state.token)}`);
+    const data = await r.json();
+    state.equipamentos = Array.isArray(data) ? data : [];
+    const sel = document.getElementById('sel-equip');
+    sel.innerHTML = '<option value="">Todos os equipamentos</option>';
+    state.equipamentos.forEach(eq => {
+      const o = document.createElement('option');
+      o.value = eq.ponto_acesso_nome || eq.nome;  // nome exato para filtro da API
+      o.textContent = eq.nome;
+      sel.appendChild(o);
+    });
+  } catch(e) { console.warn('Equipamentos não carregados:', e.message); }
+}
+
+// ── BUSCA AUTOCOMPLETE ────────────────────────────────────────────────────────
+let searchTimer;
+function onSearchInput() {
+  clearTimeout(searchTimer);
+  const q = document.getElementById('inp-search').value.trim();
+  if (q.length < 2) { closeSug(); return; }
+  searchTimer = setTimeout(() => fetchPessoas(q), 300);
+}
+function onSearchKey(e) { if(e.key==='Escape') closeSug(); }
+
+async function fetchPessoas(q) {
+  try {
+    const r = await fetch(`${API}/pessoas?token=${encodeURIComponent(state.token)}&nome=${encodeURIComponent(q)}`);
+    const data = await r.json();
+    renderSug(Array.isArray(data) ? data : []);
+  } catch(e) { closeSug(); }
+}
+
+function renderSug(list) {
+  const el = document.getElementById('suggestions');
+  if (!list.length) { el.style.display='none'; return; }
+  el.innerHTML = list.slice(0,8).map(p => {
+    const nome = p.nome || '?';
+    const dept = p.departamento || '';
+    return `<div class="sug-item" onclick='selectPessoa(${JSON.stringify(nome)})'>
+      <div class="sug-av">${initials(nome)}</div>
+      <div><div class="sug-name">${nome}</div>${dept ? `<div class="sug-dept">${dept}</div>` : ''}</div>
+    </div>`;
+  }).join('');
+  el.style.display = 'block';
+}
+
+function closeSug() { document.getElementById('suggestions').style.display = 'none'; }
+document.addEventListener('click', e => { if(!e.target.closest('.search-wrap')) closeSug(); });
+
+function selectPessoa(nome) {
+  state.pessoaNome = nome;
+  document.getElementById('inp-search').value = nome;
+  closeSug();
+  document.getElementById('filters-card').style.display = 'block';
+  document.getElementById('results-card').style.display = 'none';
+}
+
+// ── BUSCAR REGISTROS ──────────────────────────────────────────────────────────
+async function buscarRegistros() {
+  const nome = state.pessoaNome || document.getElementById('inp-search').value.trim();
+  if (!nome) { alert('Selecione ou digite um colaborador.'); return; }
+  state.pessoaNome = nome;
+
+  const dataInicio  = document.getElementById('inp-start').value;
+  const dataFim     = document.getElementById('inp-end').value;
+  const pontoAcessoNome = document.getElementById('sel-equip').value;  // é o nome do ponto
+
+  const card = document.getElementById('results-card');
+  const body = document.getElementById('res-body');
+  card.style.display = 'block';
+  body.innerHTML = '<div class="state-box"><div class="spinner"></div><span>Buscando registros…</span></div>';
+  document.getElementById('res-summary').innerHTML = '';
+  document.getElementById('res-person-info').innerHTML = '';
+  document.getElementById('res-count').textContent = '';
+  card.scrollIntoView({ behavior:'smooth', block:'nearest' });
+
+  try {
+    let url = `${API}/registros?token=${encodeURIComponent(state.token)}&pessoaNome=${encodeURIComponent(nome)}`;
+    if (dataInicio)      url += `&dataInicio=${dataInicio}`;
+    if (dataFim)         url += `&dataFim=${dataFim}`;
+    if (pontoAcessoNome) url += `&pontoAcessoNome=${encodeURIComponent(pontoAcessoNome)}`;
+
+    const r = await fetch(url);
+    const resp = await r.json();
+    if (!r.ok) throw new Error(resp.error || 'Erro ao buscar.');
+
+    const lista = resp.data || [];
+    const total = resp.total || lista.length;
+    state.registros = lista;
+
+    renderResultados(lista, total, nome, dataInicio, dataFim);
+  } catch(e) {
+    body.innerHTML = `<div class="state-box"><div class="state-icon">⚠</div><span style="color:var(--red)">${e.message}</span></div>`;
+  }
+}
+
+function renderResultados(lista, total, nome, dataInicio, dataFim) {
+  const body    = document.getElementById('res-body');
+  const countEl = document.getElementById('res-count');
+  const personEl = document.getElementById('res-person-info');
+  const summaryEl = document.getElementById('res-summary');
+
+  personEl.innerHTML = `
+    <div class="res-av">${initials(nome)}</div>
+    <div>
+      <div class="res-name">${nome}</div>
+      <div class="res-sub">${dataInicio} → ${dataFim} · ${total > lista.length ? total+' total' : ''}</div>
+    </div>`;
+
+  countEl.textContent = `${lista.length} registros exibidos`;
+
+  if (!lista.length) {
+    summaryEl.innerHTML = '';
+    body.innerHTML = '<div class="state-box"><div class="state-icon">🔍</div><span>Nenhum registro encontrado.</span></div>';
+    return;
+  }
+
+  const liberados = lista.filter(r => r.status === 1).length;
+  const negados   = lista.filter(r => r.status === 0).length;
+  const alarmes   = lista.filter(r => r.status === 2).length;
+  const dispositivos = new Set(lista.map(r => r.equipamento)).size;
+
+  summaryEl.innerHTML = `
+    <div class="sum-chip"><div class="sum-val" style="color:var(--green)">${liberados}</div><div class="sum-lbl">Liberados</div></div>
+    <div class="sum-chip"><div class="sum-val" style="color:var(--red)">${negados}</div><div class="sum-lbl">Negados</div></div>
+    <div class="sum-chip"><div class="sum-val" style="color:var(--yellow)">${alarmes}</div><div class="sum-lbl">Alarmes</div></div>
+    <div class="sum-chip"><div class="sum-val" style="color:var(--accent)">${dispositivos}</div><div class="sum-lbl">Dispositivos</div></div>
+    <div class="sum-chip"><div class="sum-val">${lista.length}</div><div class="sum-lbl">Total</div></div>`;
+
+  const rows = lista.map(r => {
+    const { data, hora } = fmtDateTime(r.dataHora);
+    const equip = r.equipamento || '—';
+    const sentido = sentidoLabel(r.sentido);
+    const chip = statusChip(r.status);
+    const dept = r.departamento ? `<span style="color:var(--muted);font-size:10px">${r.departamento}</span>` : '';
+    return `<tr>
+      <td style="color:var(--muted)">${data}</td>
+      <td style="color:var(--accent);font-weight:500">${hora}</td>
+      <td>${equip}</td>
+      <td style="color:var(--muted);font-size:11px">${sentido}</td>
+      <td>${chip}</td>
+      <td>${dept}</td>
+    </tr>`;
+  }).join('');
+
+  body.innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Data</th><th>Hora</th><th>Equipamento</th><th>Sentido</th><th>Status</th><th>Depto</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+// ── EXPORT PDF ────────────────────────────────────────────────────────────────
+function exportPDF() {
+  if (!state.registros.length) { alert('Nenhum dado para exportar.'); return; }
+
+  const nome       = state.pessoaNome || 'Colaborador';
+  const dataInicio = document.getElementById('inp-start').value;
+  const dataFim    = document.getElementById('inp-end').value;
+  const equip      = document.getElementById('sel-equip');
+  const equipNome  = equip.value ? equip.options[equip.selectedIndex].text : 'Todos';
+
+  const liberados = state.registros.filter(r => r.status === 1).length;
+  const negados   = state.registros.filter(r => r.status === 0).length;
+  const alarmes   = state.registros.filter(r => r.status === 2).length;
+
+  const rows = state.registros.map(r => {
+    const { data, hora } = fmtDateTime(r.dataHora);
+    const statusTxt = r.status === 1 ? 'Liberado' : r.status === 0 ? 'Negado' : r.status === 2 ? 'Alarme' : '—';
+    const statusCls = r.status === 1 ? 'lib' : r.status === 0 ? 'neg' : r.status === 2 ? 'ala' : '';
+    const sentido   = sentidoLabel(r.sentido) || '—';
+    return `<tr>
+      <td>${data}</td>
+      <td>${hora}</td>
+      <td>${r.equipamento || '—'}</td>
+      <td>${sentido}</td>
+      <td><span class="st ${statusCls}">${statusTxt}</span></td>
+      <td>${r.departamento || '—'}</td>
+    </tr>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/>
+  <title>Registros — ${nome}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11px; color: #1a1a2e; background: #fff; }
+    .header { background: #0f1623; color: #fff; padding: 24px 32px; display: flex; justify-content: space-between; align-items: center; }
+    .header h1 { font-size: 20px; font-weight: 700; letter-spacing: .02em; }
+    .header .sub { font-size: 11px; color: #7a8aaa; margin-top: 4px; font-family: monospace; }
+    .header .logo { font-size: 13px; font-weight: 700; opacity: .7; }
+    .info { padding: 16px 32px; background: #f5f7fb; border-bottom: 1px solid #dde3f0; display: flex; gap: 32px; flex-wrap: wrap; }
+    .info-item { display: flex; flex-direction: column; gap: 2px; }
+    .info-item .lbl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #8a96b0; }
+    .info-item .val { font-size: 12px; font-weight: 600; color: #1a1a2e; }
+    .summary { padding: 12px 32px; display: flex; gap: 16px; background: #fff; border-bottom: 1px solid #dde3f0; }
+    .sum { padding: 8px 16px; border-radius: 6px; text-align: center; min-width: 80px; }
+    .sum .n { font-size: 18px; font-weight: 800; }
+    .sum .l { font-size: 9px; text-transform: uppercase; letter-spacing: .06em; margin-top: 2px; }
+    .sum.green { background: #e8faf4; color: #1a7a5e; }
+    .sum.red   { background: #fdeaea; color: #9b2020; }
+    .sum.yel   { background: #fdf7e3; color: #7a5c00; }
+    .sum.blue  { background: #eaf0fd; color: #1a3a8a; }
+    table { width: 100%; border-collapse: collapse; margin: 0; }
+    thead { background: #0f1623; color: #fff; }
+    thead th { padding: 9px 12px; text-align: left; font-size: 9px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; }
+    tbody tr { border-bottom: 1px solid #edf0f7; }
+    tbody tr:nth-child(even) { background: #f8f9fc; }
+    tbody td { padding: 8px 12px; color: #2a2a3e; }
+    .st { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+    .st.lib { background: #e8faf4; color: #1a7a5e; }
+    .st.neg { background: #fdeaea; color: #9b2020; }
+    .st.ala { background: #fdf7e3; color: #7a5c00; }
+    .footer { padding: 12px 32px; text-align: right; font-size: 9px; color: #aaa; border-top: 1px solid #edf0f7; margin-top: 8px; }
+    @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+  </style></head><body>
+  <div class="header">
+    <div>
+      <h1>${nome}</h1>
+      <div class="sub">Relatório de Registros de Acesso</div>
+    </div>
+    <div class="logo">InControl · RH</div>
+  </div>
+  <div class="info">
+    <div class="info-item"><span class="lbl">Período</span><span class="val">${dataInicio} → ${dataFim}</span></div>
+    <div class="info-item"><span class="lbl">Equipamento</span><span class="val">${equipNome}</span></div>
+    <div class="info-item"><span class="lbl">Total de registros</span><span class="val">${state.registros.length}</span></div>
+    <div class="info-item"><span class="lbl">Gerado em</span><span class="val">${new Date().toLocaleString('pt-BR')}</span></div>
+  </div>
+  <div class="summary">
+    <div class="sum green"><div class="n">${liberados}</div><div class="l">Liberados</div></div>
+    <div class="sum red"><div class="n">${negados}</div><div class="l">Negados</div></div>
+    <div class="sum yel"><div class="n">${alarmes}</div><div class="l">Alarmes</div></div>
+    <div class="sum blue"><div class="n">${state.registros.length}</div><div class="l">Total</div></div>
+  </div>
+  <table>
+    <thead><tr><th>Data</th><th>Hora</th><th>Equipamento</th><th>Sentido</th><th>Status</th><th>Departamento</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <div class="footer">Gerado por InControl RH · ${new Date().toLocaleString('pt-BR')}</div>
+  <script>window.onload = () => { window.print(); }<\/script>
+  </body></html>`;
+
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const win  = window.open(url, '_blank');
+  if (!win) alert('Permita popups para gerar o PDF.');
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+</script>
+</body>
+</html>

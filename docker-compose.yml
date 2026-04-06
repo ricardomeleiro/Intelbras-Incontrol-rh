@@ -1,0 +1,12 @@
+version: "3.9"
+
+services:
+  incontrol-rh:
+    image: rickdevs/incontrol-rh:latest
+    container_name: incontrol-rh
+    restart: unless-stopped
+    ports:
+      - "9090:80"
+    environment:
+      # Porta 4441 = API REST do InControl (não 4445 que é o frontend Angular)
+      INCONTROL_URL: "https://192.168.5.99:4441"
